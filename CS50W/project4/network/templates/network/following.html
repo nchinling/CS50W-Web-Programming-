@@ -1,0 +1,28 @@
+{% extends "network/layout.html" %}
+
+{% block body %}
+    {% if user.is_authenticated %}
+
+    {% endif %}
+
+    <div class="all-posts">
+        <h1> Your Friends' Posts </h1>
+    </br>
+        {% for post in page_posts %}
+            <!-- <h6>{{post.user}} on {{post.date}}: </h6> -->
+            <h6><a href="{% url 'profile' id=post.user.id %}">{{post.user}}</a> on {{post.date}}: </h6>
+            <p>{{post.content}}</p>
+       
+        {% endfor %}
+    </div>
+    <nav aria-label="Page navigation example">
+        <ul class="pagination d-flex justify-content-center">
+            {% if page_posts.has_previous %}
+          <li class="page-item"><a class="page-link" href="?page={{page_posts.previous_page_number}}">Previous</a></li>
+            {% endif %}
+            {% if page_posts.has_next %}
+          <li class="page-item"><a class="page-link" href="?page={{page_posts.next_page_number}}">Next</a></li>
+            {% endif %}
+        </ul>
+      </nav>
+{% endblock %}

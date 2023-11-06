@@ -1,0 +1,48 @@
+{% extends "network/layout.html" %}
+
+{% block body %}
+    <div class="all-posts">
+        <h1>{{username}} </h1>
+        <div>
+        <p>Followers: {{followers.count }}</p>
+        <p>Following: {{following.count}}</p>
+        </div>
+        <div>
+            {% if request.user.is_authenticated %}
+            {% if request.user != userprofile %}
+                {% if not isFollowing %}
+                    <form action="{% url 'follow' %}" method = "POST">
+                        {% csrf_token %}
+                        <input type="hidden" name="user_to_follow" value = "{{userprofile}}">
+                        <input type = "submit" value ="Follow">
+                    </form>
+                {% else %}
+                <form action="{% url 'unfollow' %}" method = "POST">
+                    {% csrf_token %}
+                    <input type="hidden" name="user_to_unfollow" value = "{{userprofile}}">
+                    <input type = "submit" value ="Unfollow">
+                </form>
+                
+                {% endif %}
+            {% endif %}
+        {% endif %}
+        </div>
+        
+    </br>
+        {% for post in page_posts %}
+            <h6>{{post.user}} on {{post.date}}: </h6>
+            <p>{{post.content}}</p>
+       
+        {% endfor %}
+    </div>
+    <nav aria-label="Page navigation example">
+        <ul class="pagination d-flex justify-content-center">
+            {% if page_posts.has_previous %}
+          <li class="page-item"><a class="page-link" href="?page={{page_posts.previous_page_number}}">Previous</a></li>
+            {% endif %}
+            {% if page_posts.has_next %}
+          <li class="page-item"><a class="page-link" href="?page={{page_posts.next_page_number}}">Next</a></li>
+            {% endif %}
+        </ul>
+      </nav>
+{% endblock %}

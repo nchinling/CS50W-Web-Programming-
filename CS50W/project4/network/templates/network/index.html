@@ -1,0 +1,156 @@
+{% extends "network/layout.html" %}
+
+{% block body %}
+<script>
+  function obtainCookie(name) {
+    // Split the document.cookie string into individual cookies
+    const cookies = document.cookie.split(";");
+  
+    // Loop through the cookies to find the one with the given name
+    for (let i = 0; i < cookies.length; i++) {
+      const cookie = cookies[i].trim();
+  
+      // Check if the cookie starts with the desired name
+      if (cookie.startsWith(name + "=")) {
+        // Return the value of the cookie
+        return cookie.substring(name.length + 1);
+      }
+    }
+  
+    // Return null if the cookie is not found
+    return null;
+  }
+
+function saveChanges(postId) {
+  const editedText = document.getElementById(`edit_text_${postId}`).value;
+  fetch(`/edit_post/${postId}`, {
+    method: "POST",
+    headers: {
+      "Content-type": "application/json",
+      "X-CSRFToken": obtainCookie("csrftoken")
+    },
+    body: JSON.stringify({ content: editedText })
+  })
+  .then(response => response.json())
+  .then(result => {
+    console.log(result);
+    // Update the content on the page dynamically
+    const postContentElement = document.getElementById(`post_content_${postId}`);
+    if (postContentElement) {
+      postContentElement.innerText = editedText;
+    }
+    // Close the modal
+    const modalId = `modal_edit_post_${postId}`;
+    const modal = document.getElementById(modalId);
+    if (modal) {
+      $(`#${modalId}`).modal("hide");
+    }
+  })
+  .catch(error => {
+    console.error("Error:", error);
+  });
+}
+
+function handleLike(event) {
+
+  // const postId = event.target.dataset.postId;
+  const postId = parseInt(event.target.dataset.postId);
+  // const userLikedList = event.target.dataset.userLikedList;
+  // const postId = event.target.dataset.postId;
+  const userLikedList = JSON.parse(event.target.dataset.userLikedList);
+  console.info('postId:' + postId)
+  console.info('userLikedList:' + userLikedList)
+
+  console.info('I am inside handleLike')
+
+  if(userLikedList.includes(postId)){
+    var like = true;
+    console.info('my like:'+like)
+  } else {
+    var like = false;
+    console.info('my like:'+like)
+  }
+
+  if(like){
+    fetch(`/delete_like/${postId}`)
+    .then(response => response.json())
+  } else{
+    fetch(`/add_like/${postId}`)
+    .then(response => response.json())
+  }
+
+  like = !like
+
+}
+
+
+</script>
+
+    {% if user.is_authenticated %}
+
+    {% endif %}
+
+    <div class="all-posts">
+        <h1> All Posts </h1>
+    </br>
+        {% for post in page_posts %}
+            <!-- <h6>{{post.user}} on {{post.date}}: </h6> -->
+            <h6><a href="{% url 'profile' id=post.user.id %}">{{post.user}}</a> on {{post.date}}: </h6>
+            <!-- <p>{{post.content}}</p> -->
+            <p id="post_content_{{post.id}}">{{post.content}}</p>
+            {% if user.is_authenticated %}
+              {% if user == post.user %}
+                  <div>
+                    <button data-toggle="modal" data-target="#modal_edit_post_{{post.id}}">Edit</button>
+                  </div>
+                  <div class="modal fade" id="modal_edit_post_{{post.id}}" tabindex="-1" role="dialog" aria-labelledby="modal_edit_post_{{post.id}}" aria-hidden="true">
+                    <div class="modal-dialog" role="document">
+                      <div class="modal-content">
+                        <div class="modal-header">
+                          <h5 class="modal-title">Edit Post</h5>
+                          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                          </button>
+                        </div>
+                        <div class="modal-body">
+                          <textarea rows="10" cols="60" id="edit_text_{{post.id}}" name="content">{{post.content}}</textarea>
+                        </div>
+                        <div class="modal-footer">
+                          <!-- <button type="button" class="btn btn-primary" onclick="saveChanges()">Save changes</button> -->
+                          <!-- <button type="button" class="btn btn-primary" onclick="saveChanges({{ post.id }})">Save changes</button> -->
+                          <button type="button" class="btn btn-primary" onclick="saveChanges(this.dataset.postId)" data-post-id="{{ post.id }}">Save changes</button>
+                          <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  {% else %}
+                    {% if post.id in userLikedList %}
+                    <button data-post-id="{{post.id}}" data-user-liked-list="{{userLikedList}}" onclick="handleLike(event)">&#x1F44E;</button>
+                    <!-- <button id="likeButton_{{post.id}}" data-post-id="{{post.id}}" data-user-liked-list="{{userLikedList}}" onclick="handleLike(event)">&#x1F44E;</button> -->
+                    {% else %}
+                    <!-- <button id="likeButton_{{post.id}}" data-post-id="{{post.id}}" data-user-liked-list="{{userLikedList}}" onclick="handleLike(event)">&#x1F44E;</button> -->
+                    <button data-post-id="{{post.id}}" data-user-liked-list="{{userLikedList}}" onclick="handleLike(event)">&#x1F44D;</button>
+                
+                    {% endif %}
+                {% endif %}
+            {% endif %}
+        {% endfor %}
+    </div>
+    <nav aria-label="Page navigation example">
+        <ul class="pagination d-flex justify-content-center">
+            {% if page_posts.has_previous %}
+          <li class="page-item"><a class="page-link" href="?page={{page_posts.previous_page_number}}">Previous</a></li>
+            {% endif %}
+            {% if page_posts.has_next %}
+          <li class="page-item"><a class="page-link" href="?page={{page_posts.next_page_number}}">Next</a></li>
+            {% endif %}
+        </ul>
+      </nav>
+
+      <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script>
+      <script src="https://cdn.jsdelivr.net/npm/popper.js@1.12.9/dist/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>
+      <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.0.0/dist/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEH
+   
+{% endblock %}
+

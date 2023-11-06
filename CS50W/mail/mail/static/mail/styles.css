@@ -1,0 +1,32 @@
+textarea {
+    min-height: 400px;
+}
+
+.read{
+    background-color: lightgrey;
+}
+
+.unread{
+    background-color: white;
+}
+
+#email-view{
+    height: 300px;
+}
+
+#email-view h6{
+    background-color: greenyellow;
+    border: 0.5px solid grey;
+}
+
+#email-view p{
+    background-color: lightskyblue;
+    border: 0.5px solid grey;
+    padding-top: 10px;
+    padding-right: 10px;
+    padding-bottom: 70px;
+    padding-left: 10px;
+}
+
+
+
